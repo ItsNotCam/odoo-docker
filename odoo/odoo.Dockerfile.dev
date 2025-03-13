@@ -41,8 +41,11 @@ RUN --mount=type=secret,id=root_password \
 	ROOT_PASSWORD=$(cat /run/secrets/root_password) && \
 	echo "root:$ROOT_PASSWORD" | chpasswd
 
+RUN mkdir -p /var/lib/odoo
+RUN chown -R odoo:odoo /var/lib/odoo
+
 # Expose volume for configuration file and addons
-VOLUME ["$ODOO_PATH/odoo.conf", "$ODOO_PATH/addons"]
+VOLUME ["/odoo/odoo.conf", "/odoo/addons"]
 
 # Expose port
 EXPOSE 8069
@@ -50,4 +53,4 @@ EXPOSE 8069
 # Run & make explicit declaration of context
 USER odoo
 WORKDIR $ODOO_PATH
-ENTRYPOINT ["python3", "odoo-bin", "--addons-path=addons", "-d" , "odoo"]
+ENTRYPOINT ["python3", "odoo-bin", "--addons-path=addons", "-d" , "odoo", "-c", "/odoo/odoo.conf", "-i", "base"]

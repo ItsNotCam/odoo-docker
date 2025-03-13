@@ -4,31 +4,38 @@ services:
   db:
     image: postgres:latest
     hostname: ${POSTGRES_HOST}
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      # - ./postgres/pg_hba.conf:/var/lib/postgresql/data/pg_hba.conf
     networks:
       - internal_network
 
   app:
     image: odoo:latest
-    hostname: oodo_app
-    environment:
-      DB_HOST: ${POSTGRES_HOST}
-      DB_PORT: ${POSTGRES_PORT}
-      DB_USER: ${POSTGRES_USER}
-      DB_PASSWORD: ${POSTGRES_PASSWORD}
-      DB_NAME: ${POSTGRES_DB}
-      ADMIN_PASSWORD: ${ODOO_ADMIN_PASSWORD}
+    hostname: odoo_app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8069/web"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    # environment:
+    #   DB_HOST: ${POSTGRES_HOST}
+    #   DB_PORT: ${POSTGRES_PORT}
+    #   DB_USER: ${POSTGRES_USER}
+    #   DB_PASSWORD: ${POSTGRES_PASSWORD}
+    #   DB_NAME: ${POSTGRES_DB}
+    #   ADMIN_PASSWORD: ${ODOO_ADMIN_PASSWORD}
     volumes:
-      # - ./odoo/odoo.conf:/odoo/odoo.conf
-      - ./docker-volumes/odoo_addons:/odoo/addons
-    build:
-      context: ~odoo/odoo_app/odoo
-      dockerfile: ~odoo/odo_app/odoo/odoo.Dockerfile.dev
+      - ./odoo/odoo.conf:/odoo/odoo.conf
     networks:
       - internal_network
     depends_on:
@@ -36,9 +43,10 @@ services:
 
   nginx:
     image: nginx:latest
-    hostname: ${ODOO_HOST}
+    hostname: odoo
     ports:
-      - "8080:80"
+      - "80:80"
+      - "443:443"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf
       - ./nginx/nginx-selfsigned.crt:/etc/ssl/nginx/server.crt
