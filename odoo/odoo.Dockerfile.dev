@@ -30,8 +30,8 @@ RUN useradd -s /bin/bash odoo
 RUN mkdir -p $ODOO_PATH
 RUN chown odoo:odoo $ODOO_PATH
 
-# Build the dependencies
-RUN git clone $GIT_REPO $ODOO_PATH
+# Pull the repo
+RUN git clone --depth 1 $GIT_REPO $ODOO_PATH
 
 # Install odoo and delegate ownership
 RUN $ODOO_PATH/setup/debinstall.sh
