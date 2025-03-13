@@ -1,30 +1,35 @@
+export DOCKER_BUILDKIT=1
+
+# Variables
+DIR=$(pwd)
+ODOO_ROOT_PWD_FILE=$DIR/odoo/odoo_root_pwd.txt
+GIT_REPO=https://github.com/odoo/odoo.git
+COMMIT_ID=b394204
+
+# Create directories
 mkdir -p \
-  docker-volumes/nginx_logs    \
-	docker-volumes/postgres_data \
-	docker-volumes/odoo_addons
+  $DIR/docker-volumes/nginx_logs    \
+	$DIR/docker-volumes/postgres_data \
+	$DIR/docker-volumes/odoo_addons
 
-read -sp "Enter root password for odoo: " ROOT_PWD
-echo $ROOT_PWD > pwd.tmp
-echo
-
-read -p "Do you want to encrypt this password file? (y/n): " DO_ENCRYPT
-if [[ $DO_ENCRYPT == "y" ]]; then
-	read -sp "Enter the password to your user account: " USER_PWD
+# Create root password file if it doesn't exist
+if [ ! -f "$ODOO_ROOT_PWD_FILE" ]; then
+	read -sp "Enter root password for odoo: " ROOT_PWD
 	echo
-	openssl enc -aes-256 -iter 100000 -salt -in pwd.tmp -out odoo/odoo_root_pwd.txt -pass pass:$USER_PWD
-	rm pwd.tmp
-else
-	mv pwd.tmp odoo/odoo_root_pwd.txt
+	echo $ROOT_PWD > $ODOO_ROOT_PWD_FILE
+	chmod 644 $ODOO_ROOT_PWD_FILE
 fi
-echo
 
-cd odoo
+# Build odoo image
+cd $DIR/odoo
 docker build \
-	--build-arg ROOT_PASSWORD=$ROOT_PWD \
+	--build-arg GIT_REPO=$GIT_REPO \
+	--build-arg COMMIT_ID=$COMMIT_ID \
+	--secret id=root_password,src=$ODOO_ROOT_PWD_FILE \
 	--no-cache \
 	-t odoo:latest \
 	-f odoo.Dockerfile.dev .
-cd ..
+cd $DIR
 
 # Cleanup
 unset ROOT_PWD

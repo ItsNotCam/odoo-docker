@@ -3,11 +3,11 @@ version: '3.8'
 services:
   db:
     image: postgres:latest
-    hostname: odoo_db
+    hostname: ${POSTGRES_HOST}
     environment:
-      POSTGRES_USER: odoo
-      POSTGRES_PASSWORD: odoo
-      POSTGRES_DB: odoo
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -15,9 +15,16 @@ services:
 
   app:
     image: odoo:latest
-    hostname: odoo_app
+    hostname: oodo_app
+    environment:
+      DB_HOST: ${POSTGRES_HOST}
+      DB_PORT: ${POSTGRES_PORT}
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_NAME: ${POSTGRES_DB}
+      ADMIN_PASSWORD: ${ODOO_ADMIN_PASSWORD}
     volumes:
-      - ./odoo/odoo.conf:/odoo/odoo.conf
+      # - ./odoo/odoo.conf:/odoo/odoo.conf
       - ./docker-volumes/odoo_addons:/odoo/addons
     build:
       context: ~odoo/odoo_app/odoo
@@ -29,7 +36,7 @@ services:
 
   nginx:
     image: nginx:latest
-    hostname: odoo
+    hostname: ${ODOO_HOST}
     ports:
       - "8080:80"
     volumes:
