@@ -1,4 +1,5 @@
-FROM alpine:3.21
+# Latest Ubuntu LTS as of 03/13/2025
+FROM ubuntu:24.04
 
 # Arguments (with defaults)
 ARG GIT_REPO="https://github.com/odoo/odoo.git"
@@ -10,29 +11,23 @@ ENV GIT_REPO=${GIT_REPO}
 ENV COMMIT_ID=${COMMIT_ID}
 
 # Install dependencies
-RUN apk update && apk upgrade
-RUN apk add --no-cache \
+RUN apt update && apt upgrade -y
+RUN apt install -y --no-cache \
 	git                  \
 	python3              \
-	py3-pip              \
+	python3-pip              \
 	postgresql           \
 	postgresql-client
-
-# Set root password using command line secret
-RUN --mount=type=secret,id=root_password \
-	ROOT_PASSWORD=$(cat /run/secrets/root_password) && \
-	echo "root:$ROOT_PASSWORD" | chpasswd
 
 # Create user
 # RUN useradd -M -s /bin/false odoo   <- NO SHELL
 RUN adduser -D -s /bin/bash odoo
 
 # Create directory for odoo and delegate ownership
-RUN mkdir $ODOO_PATH
+RUN mkdir -p $ODOO_PATH
 
 # Build the dependencies - check for cached dependencies first
-RUN --mount=type=cache,target=$ODOO_PATH \
-	git clone $GIT_REPO $ODOO_PATH
+RUN git clone $GIT_REPO $ODOO_PATH
 
 # Install odoo and delegate ownership
 RUN $ODOO_PATH/setup/debinstall.sh
@@ -43,6 +38,11 @@ VOLUME ["$ODOO_PATH/odoo.conf", "$ODOO_PATH/addons"]
 
 # Expose port
 EXPOSE 8069
+
+# Set root password using command line secret
+RUN --mount=type=secret,id=root_password \
+	ROOT_PASSWORD=$(cat /run/secrets/root_password) && \
+	echo "root:$ROOT_PASSWORD" | chpasswd
 
 # Run & make explicit declaration of context
 USER odoo
