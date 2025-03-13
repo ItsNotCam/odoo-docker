@@ -10,6 +10,9 @@ ENV ODOO_PATH="/odoo"
 ENV GIT_REPO=${GIT_REPO}
 ENV COMMIT_ID=${COMMIT_ID}
 
+# As root
+USER root
+
 # Install dependencies
 RUN apt update && apt upgrade -y
 RUN apt install -y   \
@@ -21,17 +24,22 @@ RUN apt install -y   \
 
 # Create user
 # RUN useradd -M -s /bin/false odoo   <- NO SHELL
-RUN adduser -D -s /bin/bash odoo
+RUN useradd -s /bin/bash odoo
 
 # Create directory for odoo and delegate ownership
 RUN mkdir -p $ODOO_PATH
+RUN chown odoo:odoo $ODOO_PATH
 
-# Build the dependencies - check for cached dependencies first
+# Build the dependencies
 RUN git clone $GIT_REPO $ODOO_PATH
 
 # Install odoo and delegate ownership
 RUN $ODOO_PATH/setup/debinstall.sh
-RUN chown odoo:odoo $ODOO_PATH
+
+# Set root password using command line secret
+RUN --mount=type=secret,id=root_password \
+	ROOT_PASSWORD=$(cat /run/secrets/root_password) && \
+	echo "root:$ROOT_PASSWORD" | chpasswd
 
 # Expose volume for configuration file and addons
 VOLUME ["$ODOO_PATH/odoo.conf", "$ODOO_PATH/addons"]
@@ -39,13 +47,7 @@ VOLUME ["$ODOO_PATH/odoo.conf", "$ODOO_PATH/addons"]
 # Expose port
 EXPOSE 8069
 
-# Set root password using command line secret
-RUN --mount=type=secret,id=root_password \
-	ROOT_PASSWORD=$(cat /run/secrets/root_password) && \
-	echo "root:$ROOT_PASSWORD" | chpasswd
-
 # Run & make explicit declaration of context
 USER odoo
 WORKDIR $ODOO_PATH
 ENTRYPOINT ["python3", "odoo-bin", "--addons-path=addons", "-d" , "odoo"]
-
