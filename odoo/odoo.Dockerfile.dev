@@ -1,0 +1,32 @@
+FROM ubuntu:24.04
+
+# Install dependencies
+RUN apt update && apt upgrade -y
+RUN apt install -y  \
+	git               \
+	python3           \
+	python3-pip       \
+	postgresql        \
+	postgresql-client \ 
+	tree
+
+# Clone and build
+RUN git clone https://github.com/odoo/odoo.git /odoo
+RUN odoo/setup/debinstall.sh
+
+# Create user odoo with no log in or shell access
+RUN useradd -M -s /bin/false odoo
+RUN chown -R odoo:odoo /odoo
+
+# Set root password to something random - practically disables container access
+# idk if I should do this but I am soooooo ¯\_(ツ)_/¯
+RUN echo "root:$(openssl rand -base64 12)" | chpasswd
+
+# Expose volume for configuration file
+VOLUME ["/odoo/odoo.conf"]
+
+# Run
+USER odoo
+WORKDIR /odoo
+ENTRYPOINT ["python3", "odoo-bin", "--addons-path=addons", "-d" , "$DB_USER"]
+
