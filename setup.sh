@@ -26,7 +26,6 @@ docker build \
 	--build-arg GIT_REPO=$GIT_REPO \
 	--build-arg COMMIT_ID=$COMMIT_ID \
 	--secret id=root_password,src=$ODOO_ROOT_PWD_FILE \
-	--no-cache \
 	-t odoo:latest \
 	-f odoo.Dockerfile.dev .
 cd $DIR
