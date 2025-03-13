@@ -2,3 +2,4 @@ create-ssl.sh
 nginx/*.crt
 nginx/*.key
 odoo/odoo_root_pwd.txt
+docker-volumes
