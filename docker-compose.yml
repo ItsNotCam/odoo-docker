@@ -12,26 +12,31 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - internal_network
-  
+
   app:
     image: odoo:latest
     hostname: odoo_app
+    volumes:
+      - ./odoo/odoo.conf:/odoo/odoo.conf
+      - ./docker-volumes/odoo_addons:/odoo/addons
     build:
       context: ~odoo/odoo_app/odoo
-      dockerfile: Dockerfile.dev
+      dockerfile: ~odoo/odo_app/odoo/odoo.Dockerfile.dev
     networks:
       - internal_network
     depends_on:
       - db
-  
+
   nginx:
     image: nginx:latest
+    hostname: odoo
     ports:
       - "8080:80"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf
       - ./nginx/nginx-selfsigned.crt:/etc/ssl/nginx/server.crt
       - ./nginx/nginx-selfsigned.key:/etc/ssl/nginx/server.key
+      - nginx_logs:/var/log/nginx
     networks:
       - internal_network
     depends_on:
@@ -40,6 +45,18 @@ services:
 
 volumes:
   postgres_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./docker-volumes/postgres_data
+
+  nginx_logs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./docker-volumes/nginx_logs
 
 networks:
   internal_network:

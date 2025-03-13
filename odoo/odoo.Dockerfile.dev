@@ -1,5 +1,8 @@
 FROM ubuntu:24.04
 
+# Arguments
+ARG ROOT_PASSWORD
+
 # Install dependencies
 RUN apt update && apt upgrade -y
 RUN apt install -y  \
@@ -7,26 +10,43 @@ RUN apt install -y  \
 	python3           \
 	python3-pip       \
 	postgresql        \
-	postgresql-client \ 
-	tree
-
-# Clone and build
-RUN git clone https://github.com/odoo/odoo.git /odoo
-RUN odoo/setup/debinstall.sh
+	postgresql-client
 
 # Create user odoo with no log in or shell access
-RUN useradd -M -s /bin/false odoo
-RUN chown -R odoo:odoo /odoo
+# RUN useradd -M -s /bin/false odoo
 
-# Set root password to something random - practically disables container access
-# idk if I should do this but I am soooooo ¯\_(ツ)_/¯
-RUN echo "root:$(openssl rand -base64 12)" | chpasswd
+# Create user odoo
+RUN useradd -m -s /bin/bash odoo
 
-# Expose volume for configuration file
-VOLUME ["/odoo/odoo.conf"]
+# Create directory for odoo and delegate ownership
+RUN mkdir /odoo
+RUN chown odoo:odoo /odoo
 
-# Run
+# Clone as user
+USER odoo
+RUN echo "Cloning the Odoo repository, this will take a while..." && \
+    git clone https://github.com/odoo/odoo.git /odoo
+
+# Checkout to a specific commit - this is the latest commit as of 03/12/2025
+WORKDIR /odoo
+RUN echo "Resetting to working commit b394204, this will take a while..." && \
+    git reset --hard b394204
+		
+# Revert to root for setup
+USER root
+RUN /odoo/setup/debinstall.sh
+
+# Set root password
+RUN echo ${ROOT_PASSWORD} | chpasswd
+
+# Expose volume for configuration file and addons
+VOLUME ["/odoo/odoo.conf", "/odoo/addons"]
+
+# Expose port
+EXPOSE 8069
+
+# Run & make explicit declaration of context
 USER odoo
 WORKDIR /odoo
-ENTRYPOINT ["python3", "odoo-bin", "--addons-path=addons", "-d" , "$DB_USER"]
+ENTRYPOINT ["python3", "odoo-bin", "--addons-path=addons", "-d" , "odoo"]
 
