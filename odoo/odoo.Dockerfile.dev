@@ -12,11 +12,11 @@ ENV COMMIT_ID=${COMMIT_ID}
 
 # Install dependencies
 RUN apt update && apt upgrade -y
-RUN apt install -y --no-cache \
-	git                  \
-	python3              \
-	python3-pip              \
-	postgresql           \
+RUN apt install -y   \
+	git                \
+	python3            \
+	python3-pip        \
+	postgresql         \
 	postgresql-client
 
 # Create user
