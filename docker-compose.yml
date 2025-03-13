@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:latest
+    hostname: odoo_db
+    environment:
+      POSTGRES_USER: odoo
+      POSTGRES_PASSWORD: odoo
+      POSTGRES_DB: odoo
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - internal_network
+  
+  app:
+    image: odoo:latest
+    hostname: odoo_app
+    build:
+      context: ~odoo/odoo_app/odoo
+      dockerfile: Dockerfile.dev
+    networks:
+      - internal_network
+    depends_on:
+      - db
+  
+  nginx:
+    image: nginx:latest
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/nginx-selfsigned.crt:/etc/ssl/nginx/server.crt
+      - ./nginx/nginx-selfsigned.key:/etc/ssl/nginx/server.key
+    networks:
+      - internal_network
+    depends_on:
+      - app
+      - db
+
+volumes:
+  postgres_data:
+
+networks:
+  internal_network:
+    driver: bridge

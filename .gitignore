@@ -1,0 +1,3 @@
+./create-ssl.sh
+./nginx/*.crt
+./nginx/*.key
