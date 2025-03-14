@@ -1,9 +1,0 @@
-{
-	"files.associations": {
-		"Dockerfile": "dockerfile",
-		"Dockerfile.dev": "dockerfile",
-		"Dockerfile.prod": "dockerfile",
-		"docker-compose.yml": "yaml",
-		"*.docker": "dockerfile"
-	}
-}
