@@ -8,6 +8,7 @@ COMMIT_ID=b394204
 
 # Create directories
 mkdir -p $DIR/docker-volumes/{nginx_logs,postgres_data,odoo_addons}
+mkdir config/cert
 
 # Create root password file if it doesn't exist
 if [ ! -f "$ODOO_ROOT_PWD_FILE" ]; then
