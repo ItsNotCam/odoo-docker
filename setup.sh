@@ -2,7 +2,7 @@ export DOCKER_BUILDKIT=1
 
 # Variables
 DIR=$(pwd)
-ODOO_ROOT_PWD_FILE=$DIR/odoo/odoo_root_pwd.txt
+ODOO_ROOT_PWD_FILE=$DIR/config/odoo_root_pwd.txt
 GIT_REPO=https://github.com/odoo/odoo.git
 COMMIT_ID=b394204
 
