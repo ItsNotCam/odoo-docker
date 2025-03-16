@@ -1,17 +1,10 @@
 # Latest Ubuntu LTS as of 03/13/2025
 FROM ubuntu:24.04
 
-# Arguments (with defaults)
-ARG GIT_REPO="https://github.com/odoo/odoo.git"
-ARG COMMIT_ID="b394204"
-
 # Environment variables
 ENV ODOO_PATH="/odoo"
-ENV GIT_REPO=${GIT_REPO}
-ENV COMMIT_ID=${COMMIT_ID}
-
-# As root
-USER root
+ENV GIT_REPO="https://github.com/odoo/odoo.git"
+ENV COMMIT_ID="b394204"
 
 # Install dependencies
 RUN apt update && apt upgrade -y
@@ -30,7 +23,7 @@ RUN useradd -s /bin/bash odoo
 RUN mkdir -p $ODOO_PATH
 RUN chown odoo:odoo $ODOO_PATH
 
-# Pull the repo
+# Pull the repo but only the latest commit
 RUN git clone --depth 1 $GIT_REPO $ODOO_PATH
 
 # Install odoo and delegate ownership
@@ -50,7 +43,7 @@ VOLUME ["/odoo/odoo.conf", "/odoo/addons"]
 # Expose port
 EXPOSE 8069
 
-# Run & make explicit declaration of context
+# Entry
 USER odoo
 WORKDIR $ODOO_PATH
-ENTRYPOINT ["python3", "odoo-bin", "--addons-path=addons", "-d" , "odoo", "-c", "/odoo/odoo.conf", "-i", "base"]
+ENTRYPOINT ["python3", "odoo-bin", "--addons-path=addons", "-d" , "/odoo", "-c", "/odoo/odoo.conf", "-i", "base"]

@@ -7,10 +7,7 @@ GIT_REPO=https://github.com/odoo/odoo.git
 COMMIT_ID=b394204
 
 # Create directories
-mkdir -p \
-  $DIR/docker-volumes/nginx_logs    \
-	$DIR/docker-volumes/postgres_data \
-	$DIR/docker-volumes/odoo_addons
+mkdir -p $DIR/docker-volumes/{nginx_logs,postgres_data,odoo_addons}
 
 # Create root password file if it doesn't exist
 if [ ! -f "$ODOO_ROOT_PWD_FILE" ]; then
@@ -21,14 +18,10 @@ if [ ! -f "$ODOO_ROOT_PWD_FILE" ]; then
 fi
 
 # Build odoo image
-cd $DIR/odoo
-docker build \
-	--build-arg GIT_REPO=$GIT_REPO \
-	--build-arg COMMIT_ID=$COMMIT_ID \
+docker build . \
+	--no-cache \
 	--secret id=root_password,src=$ODOO_ROOT_PWD_FILE \
-	-t odoo:latest \
-	-f odoo.Dockerfile.dev .
-cd $DIR
+	-t odoo:latest
 
 # Cleanup
 unset ROOT_PWD

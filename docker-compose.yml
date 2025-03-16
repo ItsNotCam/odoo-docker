@@ -26,12 +26,16 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
+    build:
+      context: .
+      dockerfile: Dockerfile
     volumes:
-      - ./odoo/odoo.conf:/odoo/odoo.conf
+      - ./config/odoo.conf:/odoo/odoo.conf
     networks:
       - internal_network
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
   nginx:
     image: nginx:latest
@@ -40,7 +44,7 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./config/nginx.conf:/etc/nginx/nginx.conf
       - ./nginx/nginx-selfsigned.crt:/etc/ssl/nginx/server.crt
       - ./nginx/nginx-selfsigned.key:/etc/ssl/nginx/server.key
       - nginx_logs:/var/log/nginx
@@ -48,7 +52,6 @@ services:
       - internal_network
     depends_on:
       - app
-      - db
 
 volumes:
   postgres_data:
